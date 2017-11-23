@@ -1,0 +1,12 @@
+{% extends "index.html" %}
+
+{% block content %}
+<h1>Your Repos</h1>
+
+  {% for repo in repos %}
+<p> repo name is: {{ repo.full_name  }}, language is: {{ repo.language|string  }} </p>
+
+  {% endfor %}
+{% endblock %}
+
+

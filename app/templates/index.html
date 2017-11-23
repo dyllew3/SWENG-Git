@@ -1,13 +1,15 @@
 <html>
-  <head>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <header class="Header">
+    <div>SWENG: <a href="/index">Home</a>, <a href="/login">GetRepos</a></div>
     {% if title %}
-    <title>{{ title }} - microblog</title>
+    <title>{{ title }} </title>
     {% else %}
-    <title>microblog</title>
+    <title>SWENG-Git</title>
     {% endif %}
-  </head>
+  </header>
   <body>
-    <div>SWENG: <a href="/index">Home</a></div>
+    
     <hr>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
