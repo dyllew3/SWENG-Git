@@ -2,9 +2,9 @@
 
 {% block content %}
 <h1>Your Repos</h1>
-
+ <h2><img src= "{{ avatar_url}}" class="center"></h2>
   {% for repo in repos %}
-<p> repo name is: {{ repo.full_name  }}, language is: {{ repo.language|string  }} </p>
+<p style="text-align:center"> repo name is: {{ repo.full_name  }}, language is: {{ repo.language|string  }} </p>
 
   {% endfor %}
 {% endblock %}
