@@ -1,13 +1,19 @@
+{% extends "index.html"  %}
 {% block content %}
 
 <h1 style="text-align:center;">Select Repo</h1>
 <h2 style="text-align:center;"><img src= "{{ avatar_url}}" class="center"></h2>
 
+<div style="text-align:center;">
+  <p>Select one of the repos below to view the total lines of code
+    in the repository after each commit</p>
+  </div>
+
 <form style="text-align:center;" method="POST" action="{{ url_for('loc') }}">
   
 <select name="select_repo">
   {% for repo in rs %}
-<option value= {{ repo }}> {{ repo  }} </option>
+<option value= {{ repo }}> {{ repo }} </option>
 
 {% endfor %}
 </select>
@@ -15,7 +21,7 @@
 </form>
 
 {% if data %}
-<h2 style="text-align:center;fill:red"> {{ data[1] }}</h2>
+<h2 style="text-align:center;fill:red"> {{ name }}</h2>
 
 <style>
 
@@ -72,9 +78,11 @@
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 <script>
+var data = {{ data[0] | safe  }};
 
+  
 var margin = {top: 40, right: 20, bottom: 30, left: 60},
-    width = 2000 - margin.left - margin.right,
+    width = 900 - margin.left - margin.right + (1100 * Math.floor(data.length/50)),
     height = 500 - margin.top - margin.bottom;
 
 var formatPercent = d3.format(".2s");
@@ -109,8 +117,7 @@ var svg = d3.select("body").append("svg")
 
 svg.call(tip);
 
-d3.json(" {{ url_for('static', filename=data[0] ) }} ", function(error, data) {
-console.log(data);
+
   x.domain(data.map(function(d) { return d.commit; }));
   y.domain([0, d3.max(data, function(d) { return d.total; })]);
 
@@ -141,7 +148,7 @@ console.log(data);
       .on('mouseover', tip.show)
       .on('mouseout', tip.hide)
 
-});
+
 
 function type(d) {
 d.total = +d.total;

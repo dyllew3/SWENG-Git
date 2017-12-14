@@ -1,8 +1,14 @@
 <html>
   <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
   <header class="Header">
-    <div>SWENG: <a href="/index">Home</a>, <a href="/login">GetRepos</a>
-      {% if 'username' in session   %} <a href="/logout"> logout</a> {% endif %}
+    <div>SWENG: <a href="/index">Home</a>, 
+      {% if 'username' in session   %}
+        <a href="/repos">GetRepos</a>
+        <a href="/logout"> logout</a>
+        <a href="/loc">Lines of code</a>
+      {% else %}
+      <a href="/login">Login</a>
+      {% endif %}
     </div>
     {% if title %}
     <title>{{ title }} </title>

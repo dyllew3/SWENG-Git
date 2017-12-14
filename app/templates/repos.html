@@ -1,8 +1,47 @@
 {% extends "index.html" %}
 
 {% block content %}
-<h1>Your Repos</h1>
- <h2><img src= "{{ avatar_url}}" class="center"></h2>
+<h1>HomePage</h1>
+<h2><img src= "{{ avatar_url}}" class="center"></h2>
+
+  <script>
+    window.addEventListener('resize', function (event) {
+      $("#chart").width(window.innerWidth * 0.9);
+      $("#chart").height(window.innerHeight);
+    });
+  </script>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="{{ url_for('static', filename='pieChart.js') }}"></script>
+<h2 style="margin:auto;text-align:center;">Language stats across all repos</h2>
+<div id="chart" style="width: 900;height: 500;margin: auto;">
+</div>
+<script>
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+  var data= {{ data | safe }};
+  var colours = [];
+  for(var i = 0 ; i < data.length; i++){
+     colours.push(getRandomColor());
+}
+    $("#chart").empty();
+    var pieChartConfig = {
+    mainDiv: "#chart",
+    colorRange: colours,
+    data: data,
+    caption:"language",
+    tooltipLable:"Language",
+    value:"amount"
+  };
+  var pieChart = new pieChart(pieChartConfig);
+</script>
+<p style="text-align:center"> <strong>The following is a list of repos on your account</strong> <br> Click on any to see some data on each </p>
   {% for repo in repos %}
 <p style="text-align:center"> repo name is: {{ repo.full_name  }}, language is: {{ repo.language|string  }} </p>
 

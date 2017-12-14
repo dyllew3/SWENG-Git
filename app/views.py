@@ -1,7 +1,9 @@
+
+import collections
 import datetime
 import github
-import os
 import json
+import os
 
 from bson import json_util
 from app import app
@@ -58,14 +60,30 @@ def print_repos():
         get_repos()
         pic = a.get_user().avatar_url
         a = a.get_user().get_repos()
-        return render_template('repos.html', repos=a, avatar_url=pic)
+        asd = collections.defaultdict(int)
+        for r in a:
+            if r.language:
+                asd[r.language] += 1
+            elif r.get_languages():
+                for l in r.get_languages().keys():
+                    asd[l] += 1
+
+        data = []
+        for k,v in asd.items():
+            b = {}
+            print((k,v))
+            b['language'] = k
+            b['amount'] = v
+            data.append(b)
+        return render_template('repos.html', repos=a, avatar_url=pic, data=data)
     except github.BadCredentialsException:
         flash('Login Details are incorrect')
         
     except TimeoutException:
         flash("Timeout has occured please re-enter details")
-    except Exception:
+    except Exception as e:
         flash('An unknown error has occured,  this may be because you have 2 factor authentication on')
+        flash(e)
 
     session.pop('username', None)        
     return redirect('/login')
@@ -84,10 +102,12 @@ def loc():
     avatar_url = g.get_user().avatar_url
     cache.set(session['username']['user'],g,5*60 )
     data = None
+    name = None
     if request.form.get('select_repo'):
-        data =  get_data(request.form.get('select_repo'))
-
-    return render_template('loc.html', rs=session['username']['repos'], title='Select Repo', avatar_url=avatar_url, data=data)
+        name = request.form.get('select_repo')
+        data = get_data(request.form.get('select_repo'))
+        
+    return render_template('loc.html', rs=session['username']['repos'], title='Select Repo', avatar_url=avatar_url, data=data, name=name)
 
 
 
@@ -121,27 +141,29 @@ def get_data(repo):
     data = []
     if 'username' in session:
         git = cache.get(session['username']['user'])
-        cache.set(session['username']['user'], git, 5*60)
+        cache.set(session['username']['user'], git, timeout=5*60)
         repo_obj = git.get_repo(repo)
-        i = 1
         total = 0
-        data = [] if not read_from("%s.json" % repo.strip("/..").replace('/','-')) else read_from("%s.json" % repo.strip("/..").replace('/','-')) 
+        data = []
+        i = 1
+        if cache.get(repo) and repo in session['username']['repos']:
+            data = cache.get(repo)[0]
+            i = data[len(data) - 1]['commit'] + 1
         timestamp = datetime.datetime.now()
-        commits = repo_obj.get_commits() if not data else repo_obj.get_commits(since=data[len(data) - 1]['time']) 
+        commits = repo_obj.get_commits() if not data else repo_obj.get_commits(since=cache.get(repo)[1])
         for commit in commits.reversed:
             to_store = {}
             to_store['commit'] = i
             stat = commit.stats
             total += stat.additions - stat.deletions
-            
             to_store['total'] = total
             to_store['add'] = stat.additions
             to_store['del'] = stat.deletions
-            to_store['time'] = timestamp
             data.append(to_store)
             i += 1
-        write_to(data, "%s.json" % repo.strip("/..").replace('/','-') )
-        return ("%s.json" % repo.strip("..").replace('/','-'), repo)
+        cache.set(repo,[data, timestamp], timeout=0)
+        return [data, timestamp]
+        
     else:
         return None
 
