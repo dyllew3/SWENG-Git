@@ -11,3 +11,4 @@ Requires the following libraries:
 + Collections
 use pip install to get them.
 To run the webapp simply run run.py in the repo with python3
+Caches the result of the lines of code query then will check if there has been anymore commits since the last query if there has been it adds them to the current result if not then it just returns the cached results alone.
