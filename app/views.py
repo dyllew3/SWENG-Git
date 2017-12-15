@@ -149,7 +149,7 @@ def get_data(repo):
             data = cache.get(repo)[0]
             i = data[len(data) - 1]['commit'] + 1
         timestamp = datetime.datetime.now()
-        commits = repo_obj.get_commits() if not data else repo_obj.get_commits(since=cache.get(repo)[1])
+        commits = repo_obj.get_commits() if not data else repo_obj.get_commits(since=cache.get(repo)[1], until=timestamp)
         # Get all commit stats since last time this was queried
         for commit in commits.reversed:
             to_store = {}
