@@ -25,7 +25,7 @@ function getRandomColor() {
   }
   return color;
 }
-  var data= {{ data | safe }};
+  var data= {{ data['languages']['values'] | safe }};
   var colours = [];
   for(var i = 0 ; i < data.length; i++){
      colours.push(getRandomColor());
@@ -41,37 +41,5 @@ function getRandomColor() {
   };
   var pieChart = new pieChart(pieChartConfig);
 </script>
-<p style="text-align:center"> <strong>The following is a list of repos on your account</strong> <br> Click on any to see some data on each </p>
-<div style="margin:0 auto; text-align:center;">
-<select id="sel_repo" >
-  {% for repo in repos %}
-<option style="text-align:center" value={{ repo.full_name|safe }} >{{ repo.full_name|safe }}</option>
- {% endfor %}
-</select>
- <script type="text/javascript">
-    function GetSelectedTextValue() {
-        var ddlFruits = document.getElementById("sel_repo").value;
-        location = "/repo/" + ddlFruits;
-    }
-</script>
- <input type="button" onclick="GetSelectedTextValue()" value="Goto repo" /> 
-</div>
-<div style="margin:0 auto; text-align:center;">
-  <h3>Or check out the lines of code counter</h3>
-  <p>Allows for checking the amount of lines of code in repo after every commi</p>
-  <form style="text-align:center;" method="POST" action="{{ url_for('loc') }}">
-  
-<select name="select_repo">
-  {% for repo in repos %}
-<option value= {{ repo.full_name }}> {{ repo.full_name }} </option>
-
-{% endfor %}
-</select>
-<button type="submit" class="btn btn-default">Go</button>
-</form>
-
-</div>
-
+<p style="text-align:center"> 
 {% endblock %}
-
-

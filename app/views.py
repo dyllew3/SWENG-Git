@@ -2,15 +2,9 @@
 import collections
 import datetime
 import github
-import json
-import os
-
-from bson import json_util
 from app import app
 from github import Github, GithubException
 from flask import render_template, flash, redirect, session, url_for, request
-from pathlib import Path
-
 
 from .forms import GithubForm
 from werkzeug.contrib.cache import SimpleCache
@@ -28,20 +22,20 @@ def index():
     if 'username' in session and not cache.get(session['username']['user']):
         session.pop('username', None)
         
-    return render_template('index.html', 
+    return render_template('base.html', 
                            title='Index')
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if 'username' in session:
-        return redirect('/repos')
+        return redirect('/homepage')
     form =  GithubForm()
     if form.validate_on_submit():
         try :
             g = Github(form.username.data, form.password.data)
             session['username'] = {'user':form.username.data}
             g.get_user()
-            cache.set(form.username.data, g, timeout = 5*60)
+            cache.set(form.username.data, g, timeout = 15*60)
             if get_repos():            
                 return redirect('/repos')
         except  github.BadCredentialsException:
@@ -51,8 +45,12 @@ def login():
     return render_template('login.html', 
                            title='Sign In',
                            form=form)
+@app.route('/homepage')
 @app.route('/repos')
 def print_repos():
+    if 'username' not in session:
+        flash("You must be logged in to visit that page")
+        return redirect('/login')
     try:
         a = cache.get(session['username']['user'])
         if  not a:
@@ -71,7 +69,6 @@ def print_repos():
         data = []
         for k,v in asd.items():
             b = {}
-            print((k,v))
             b['language'] = k
             b['amount'] = v
             data.append(b)
@@ -100,8 +97,9 @@ def loc():
         return redirect(url_for('login'))
     g = cache.get(session['username']['user'])
     avatar_url = g.get_user().avatar_url
-    cache.set(session['username']['user'],g,5*60 )
+    cache.set(session['username']['user'],g,15*60 )
     data = None
+    # Get repo you want to query
     name = None
     if request.form.get('select_repo'):
         name = request.form.get('select_repo')
@@ -139,9 +137,10 @@ def get_repos():
 
 def get_data(repo):
     data = []
+
     if 'username' in session:
         git = cache.get(session['username']['user'])
-        cache.set(session['username']['user'], git, timeout=5*60)
+        cache.set(session['username']['user'], git, timeout=15*60)
         repo_obj = git.get_repo(repo)
         total = 0
         data = []
@@ -151,6 +150,7 @@ def get_data(repo):
             i = data[len(data) - 1]['commit'] + 1
         timestamp = datetime.datetime.now()
         commits = repo_obj.get_commits() if not data else repo_obj.get_commits(since=cache.get(repo)[1])
+        # Get all commit stats since last time this was queried
         for commit in commits.reversed:
             to_store = {}
             to_store['commit'] = i
@@ -168,24 +168,36 @@ def get_data(repo):
         return None
 
 
-def read_from(filename):
-    path = os.path.abspath('')
-    full_name = "%s/app/static/%s" % (path,filename)
-    my_file = Path(full_name)
-    if my_file.is_file():
-        return json.load(open(full_name), object_hook=json_util.object_hook)
-    return None
-    
-def write_to(data,filename):
-    if '/..' in filename:
-        return None
-    path = os.path.abspath('')
-    full_name = "%s/app/static/%s" % (path,filename.replace('/','-'))
-    with open(full_name, 'w+') as f:
-        f.write(json.dumps(data, default=json_util.default))
+@app.route('/repo/<string:user>/<string:name>')
+def repo_data(user,name):
+    if 'username' not in session:
+        flash("Must be logged in to use that page")
+        return redirect('/login')
+    # Get user of repo
+    new_g = Github(user) if user != session['username']['user'] else cache.get(session['username']['user'])
+    if not new_g:
+        flash("Timeout has occured please re-enter details")
+        return redirect('/login')
+    git_user = new_g.get_user()
+    data = {'languages':{},'commit times':{}} 
+    try:
+        data['languages']['values'] = []
+        data['languages']['commit times'] = []
+        data['languages']['time'] = datetime.datetime.now()
+        repo = git_user.get_repo(name)
+        ls = repo.get_languages()
+        # Get language stats
+        for l in  repo.get_languages():
+            l_dict = {'language':l, 'amount':ls[l]}
+            data['languages']['values'] += [l_dict]
+        if not ls:
+            data['languages']['values'] = [{'language':'None', 'amount':repo.total}]
+        return render_template('repo.html', title='Repo Info',rs=session['username']['repos'], data=data)
 
-@app.route('/temp')
-def temp():
-    return render_template('temp.html')
+    except Exception:
+        flash("An error has occured")
+        return  redirect('/homepage')
+    return name;
+
 
 app.secret_key = '\x8b\x81fy\xba\xc1^OZ/\x02r3\x9el\xde\x085\xb0\xa5u\xfa\xfe\xfc'

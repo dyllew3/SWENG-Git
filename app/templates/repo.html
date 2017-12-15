@@ -1,8 +1,7 @@
 {% extends "index.html" %}
 
 {% block content %}
-<h1>HomePage</h1>
-<h2><img src= "{{ avatar_url}}" class="center"></h2>
+<h1>Repo stats</h1>
 
   <script>
     window.addEventListener('resize', function (event) {
@@ -13,7 +12,7 @@
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <script src="https://d3js.org/d3.v4.min.js"></script>
 <script src="{{ url_for('static', filename='pieChart.js') }}"></script>
-<h2 style="margin:auto;text-align:center;">Language stats across all repos</h2>
+<h2 style="margin:auto;text-align:center;">Language stat across this repo</h2>
 <div id="chart" style="width: 900;height: 500;margin: auto;">
 </div>
 <script>
@@ -25,7 +24,7 @@ function getRandomColor() {
   }
   return color;
 }
-  var data= {{ data | safe }};
+  var data= {{ data['languages']['values'] | safe }};
   var colours = [];
   for(var i = 0 ; i < data.length; i++){
      colours.push(getRandomColor());
@@ -36,14 +35,14 @@ function getRandomColor() {
     colorRange: colours,
     data: data,
     caption:"language",
-    tooltipLable:"Language",
+    tooltipLable:"Language Percent",
     value:"amount"
   };
   var pieChart = new pieChart(pieChartConfig);
 </script>
 <p style="text-align:center"> <strong>The following is a list of repos on your account</strong> <br> Click on any to see some data on each </p>
-<div style="margin:0 auto; text-align:center;">
-<select id="sel_repo" >
+
+<select id="sel_repo">
   {% for repo in repos %}
 <option style="text-align:center" value={{ repo.full_name|safe }} >{{ repo.full_name|safe }}</option>
  {% endfor %}
@@ -55,23 +54,6 @@ function getRandomColor() {
     }
 </script>
  <input type="button" onclick="GetSelectedTextValue()" value="Goto repo" /> 
-</div>
-<div style="margin:0 auto; text-align:center;">
-  <h3>Or check out the lines of code counter</h3>
-  <p>Allows for checking the amount of lines of code in repo after every commi</p>
-  <form style="text-align:center;" method="POST" action="{{ url_for('loc') }}">
-  
-<select name="select_repo">
-  {% for repo in repos %}
-<option value= {{ repo.full_name }}> {{ repo.full_name }} </option>
 
-{% endfor %}
-</select>
-<button type="submit" class="btn btn-default">Go</button>
-</form>
-
-</div>
 
 {% endblock %}
-
-
