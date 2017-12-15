@@ -148,6 +148,7 @@ def get_data(repo):
         if cache.get(repo) and repo in session['username']['repos']:
             data = cache.get(repo)[0]
             i = data[len(data) - 1]['commit'] + 1
+            total = data[len(data) - 1]['total']
         timestamp = datetime.datetime.now()
         commits = repo_obj.get_commits() if not data else repo_obj.get_commits(since=cache.get(repo)[1], until=timestamp)
         # Get all commit stats since last time this was queried
